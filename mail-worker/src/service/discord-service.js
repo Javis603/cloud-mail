@@ -101,7 +101,7 @@ function buildPayload(email, attachments, options) {
 }
 
 async function sendWithRetry(webhookUrl, payload, retries = 1) {
-	const response = await fetch(webhookUrl, {
+	const response = await fetch(withComponentsParam(webhookUrl), {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(payload)
@@ -135,6 +135,17 @@ async function getRetryAfterMs(response) {
 
 function sleep(ms) {
 	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function withComponentsParam(webhookUrl) {
+	try {
+		const url = new URL(webhookUrl);
+		url.searchParams.set('with_components', 'true');
+		return url.toString();
+	} catch {
+		const separator = webhookUrl.includes('?') ? '&' : '?';
+		return `${webhookUrl}${separator}with_components=true`;
+	}
 }
 
 function field(name, value, inline) {
