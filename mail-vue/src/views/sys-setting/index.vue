@@ -563,6 +563,7 @@
         <div class="forward-set-body">
           <el-input-tag tag-type="warning" :placeholder="$t('discordWebhookUrlDesc')" v-model="discordWebhookUrls"
                         @add-tag="addDiscordWebhookTag"></el-input-tag>
+          <el-input :placeholder="$t('customDomainDesc')" v-model="customDomain"></el-input>
           <div class="tg-msg-label">
             <span>{{t('from')}}</span>
             <el-select  v-model="discordMsgFrom" >
@@ -1057,6 +1058,7 @@ function openTgSetting() {
 
 function openDiscordSetting() {
   discordWebhookStatus.value = setting.value.discordWebhookStatus ?? 1
+  customDomain.value = setting.value.customDomain
   discordMsgFrom.value = setting.value.discordMsgFrom || 'only-name'
   discordMsgText.value = setting.value.discordMsgText || 'hide'
   discordMsgTo.value = setting.value.discordMsgTo || 'show'
@@ -1224,6 +1226,7 @@ function tgBotSave() {
 function discordWebhookSave() {
   const form = {
     discordWebhookUrls: discordWebhookUrls.value + '',
+    customDomain: customDomain.value,
     discordWebhookStatus: discordWebhookStatus.value,
     discordMsgFrom: discordMsgFrom.value,
     discordMsgText: discordMsgText.value,
