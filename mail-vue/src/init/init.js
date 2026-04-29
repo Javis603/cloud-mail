@@ -16,9 +16,7 @@ export async function init() {
 
     const token = localStorage.getItem('token');
     if (!settingStore.lang) {
-        let lang = navigator.language.split('-')[0]
-        lang = lang === 'zh' ? lang : 'en'
-        settingStore.lang = lang
+        settingStore.lang = getDefaultLang()
     }
 
     i18n.global.locale.value = settingStore.lang
@@ -67,5 +65,16 @@ function removeLoading() {
     setTimeout(() => {
         doc.remove()
     },1000)
+}
+
+function getDefaultLang() {
+    const lang = navigator.language.toLowerCase()
+    if (['zh-tw', 'zh-hk', 'zh-mo'].includes(lang)) {
+        return 'zh-tw'
+    }
+    if (lang.startsWith('zh')) {
+        return 'zh'
+    }
+    return 'en'
 }
 

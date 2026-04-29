@@ -10,6 +10,18 @@
       </div>
     </div>
     <div class="toolbar">
+      <el-dropdown @command="changeLang" :teleported="false">
+        <div class="icon-item" :title="$t('language')">
+          <Icon icon="material-symbols:translate"/>
+        </div>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item command="en">English</el-dropdown-item>
+            <el-dropdown-item command="zh">简体中文</el-dropdown-item>
+            <el-dropdown-item command="zh-tw">繁體中文</el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
       <div v-if="uiStore.dark" class="sun-icon icon-item" @click="openDark($event)">
         <Icon icon="mingcute:sun-fill"/>
       </div>
@@ -86,7 +98,7 @@ import {hasPerm} from "@/perm/perm.js"
 import {useI18n} from "vue-i18n";
 import {setExtend} from "@/utils/day.js"
 
-const {t} = useI18n();
+const {t, locale} = useI18n();
 const route = useRoute();
 const settingStore = useSettingStore();
 const userStore = useUserStore();
@@ -183,8 +195,9 @@ async function copyEmail(email) {
 }
 
 function changeLang(lang) {
-  setExtend(lang === 'en' ? 'en' : 'zh-cn')
+  setExtend(lang)
   settingStore.lang = lang
+  locale.value = lang
 }
 
 function openNotice() {
