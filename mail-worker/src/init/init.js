@@ -28,8 +28,29 @@ const dbInit = {
 		await this.v2_7DB(c);
 		await this.v2_8DB(c);
 		await this.v2_9DB(c);
+		await this.v2_10DB(c);
 		await settingService.refresh(c);
 		return c.text('success');
+	},
+
+	async v2_10DB(c) {
+		const ADD_COLUMN_SQL_LIST = [
+			`ALTER TABLE setting ADD COLUMN discord_webhook_urls TEXT NOT NULL DEFAULT '';`,
+			`ALTER TABLE setting ADD COLUMN discord_webhook_status INTEGER NOT NULL DEFAULT 1;`,
+			`ALTER TABLE setting ADD COLUMN discord_msg_to TEXT NOT NULL DEFAULT 'show';`,
+			`ALTER TABLE setting ADD COLUMN discord_msg_from TEXT NOT NULL DEFAULT 'only-name';`,
+			`ALTER TABLE setting ADD COLUMN discord_msg_text TEXT NOT NULL DEFAULT 'hide';`
+		];
+
+		const promises = ADD_COLUMN_SQL_LIST.map(async (sql) => {
+			try {
+				await c.env.db.prepare(sql).run();
+			} catch (e) {
+				console.warn(`add discord setting column failed: ${e.message}`);
+			}
+		});
+
+		await Promise.all(promises);
 	},
 
 	async v2_9DB(c) {

@@ -94,6 +94,7 @@ const settingService = {
 		}
 
 		settingRow.secretKey = settingRow.secretKey ? `${settingRow.secretKey.slice(0, 6)}******` : null;
+		settingRow.discordWebhookUrls = maskList(settingRow.discordWebhookUrls, 34);
 
 		Object.keys(settingRow.resendTokens).forEach(key => {
 			settingRow.resendTokens[key] = `${settingRow.resendTokens[key].slice(0, 12)}******`;
@@ -132,6 +133,10 @@ const settingService = {
 
 		if (Array.isArray(params.emailPrefixFilter)) {
 			params.emailPrefixFilter = params.emailPrefixFilter + '';
+		}
+
+		if (params.discordWebhookUrls !== undefined) {
+			params.discordWebhookUrls = resolveMaskedList(params.discordWebhookUrls, settingData.discordWebhookUrls);
 		}
 
 		params.resendTokens = JSON.stringify(resendTokens);
@@ -222,5 +227,28 @@ const settingService = {
 		};
 	}
 };
+
+function maskList(value, visibleLength = 12) {
+	if (!value) return '';
+	return value
+		.split(',')
+		.map(item => item.trim())
+		.filter(Boolean)
+		.map(item => `${item.slice(0, visibleLength)}******`)
+		.join(',');
+}
+
+function resolveMaskedList(nextValue, currentValue) {
+	const currentItems = (currentValue || '').split(',').map(item => item.trim()).filter(Boolean);
+	const nextItems = (nextValue || '').split(',').map(item => item.trim()).filter(Boolean);
+
+	return nextItems.map((item, index) => {
+		if (!item.includes('******')) return item;
+		const prefix = item.split('******')[0];
+		const currentByIndex = currentItems[index];
+		if (currentByIndex && currentByIndex.startsWith(prefix)) return currentByIndex;
+		return currentItems.find(current => current.startsWith(prefix)) || '';
+	}).filter(Boolean).join(',');
+}
 
 export default settingService;

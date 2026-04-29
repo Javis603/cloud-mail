@@ -10,6 +10,7 @@ import emailUtils from '../utils/email-utils';
 import roleService from '../service/role-service';
 import userService from '../service/user-service';
 import telegramService from '../service/telegram-service';
+import discordService from '../service/discord-service';
 
 export async function email(message, env, ctx) {
 
@@ -19,6 +20,8 @@ export async function email(message, env, ctx) {
 			receive,
 			tgChatId,
 			tgBotStatus,
+			discordWebhookStatus,
+			discordWebhookUrls,
 			forwardStatus,
 			forwardEmail,
 			ruleEmail,
@@ -145,6 +148,10 @@ export async function email(message, env, ctx) {
 		//转发到TG
 		if (tgBotStatus === settingConst.tgBotStatus.OPEN && tgChatId) {
 			await telegramService.sendEmailToBot({ env }, emailRow)
+		}
+
+		if (discordWebhookStatus === settingConst.discordWebhookStatus.OPEN && discordWebhookUrls) {
+			await discordService.sendEmailToWebhook({ env }, emailRow, attachments)
 		}
 
 		//转发到其他邮箱

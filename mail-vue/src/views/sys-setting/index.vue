@@ -246,6 +246,15 @@
                 </div>
               </div>
               <div class="setting-item">
+                <div><span>{{ $t('discordWebhook') }}</span></div>
+                <div class="forward">
+                  <span>{{ setting.discordWebhookStatus === 0 ? $t('enabled') : $t('disabled') }}</span>
+                  <el-button class="opt-button" size="small" type="primary" @click="openDiscordSetting">
+                    <Icon icon="fluent:settings-48-regular" width="18" height="18"/>
+                  </el-button>
+                </div>
+              </div>
+              <div class="setting-item">
                 <div><span>{{ $t('otherEmail') }}</span></div>
                 <div class="forward">
                   <span>{{ setting.forwardStatus === 0 ? $t('enabled') : $t('disabled') }}</span>
@@ -540,6 +549,65 @@
         </template>
       </el-dialog>
       <el-dialog
+          v-model="discordSettingShow"
+          class="forward-dialog"
+      >
+        <template #header>
+          <div class="forward-head">
+            <span class="forward-set-title">{{ $t('discordWebhook') }}</span>
+            <el-tooltip effect="dark" :content="$t('discordWebhookDesc')">
+              <Icon class="warning" icon="fe:warning" width="18" height="18"/>
+            </el-tooltip>
+          </div>
+        </template>
+        <div class="forward-set-body">
+          <el-input-tag tag-type="warning" :placeholder="$t('discordWebhookUrlDesc')" v-model="discordWebhookUrls"
+                        @add-tag="addDiscordWebhookTag"></el-input-tag>
+          <div class="tg-msg-label">
+            <span>{{t('from')}}</span>
+            <el-select  v-model="discordMsgFrom" >
+              <el-option
+                  v-for="item in tgMsgFromOption"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+              />
+            </el-select>
+          </div>
+          <div class="tg-msg-label">
+            <span>{{t('recipient')}}</span>
+            <el-select  v-model="discordMsgTo" >
+              <el-option
+                  v-for="item in tgMsgToOption"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+              />
+            </el-select>
+          </div>
+          <div class="tg-msg-label">
+            <span>{{t('emailText')}}</span>
+            <el-select  v-model="discordMsgText" >
+              <el-option
+                  v-for="item in tgMsgTextOption"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+              />
+            </el-select>
+          </div>
+        </div>
+        <template #footer>
+          <div class="dialog-footer">
+            <el-switch v-model="discordWebhookStatus" :active-value="0" :inactive-value="1" :active-text="$t('enable')"
+                       :inactive-text="$t('disable')"/>
+            <el-button :loading="settingLoading" type="primary" @click="discordWebhookSave">
+              {{ $t('save') }}
+            </el-button>
+          </div>
+        </template>
+      </el-dialog>
+      <el-dialog
           v-model="thirdEmailShow"
           class="forward-dialog"
       >
@@ -768,6 +836,7 @@ const resendTokenFormShow = ref(false)
 const r2DomainShow = ref(false)
 const turnstileShow = ref(false)
 const tgSettingShow = ref(false)
+const discordSettingShow = ref(false)
 const noticePopupShow = ref(false)
 const thirdEmailShow = ref(false)
 const forwardRulesShow = ref(false)
@@ -837,8 +906,10 @@ const authRefreshOptions = computed(() => [
 ])
 
 const tgChatId = ref([])
+const discordWebhookUrls = ref([])
 const customDomain = ref('')
 const tgBotStatus = ref(0)
+const discordWebhookStatus = ref(0)
 const tgBotToken = ref('')
 const forwardEmail = ref([])
 const forwardStatus = ref(0)
@@ -849,6 +920,9 @@ const ruleEmail = ref([])
 const tgMsgFrom = ref('')
 const tgMsgTo = ref('')
 const tgMsgText = ref('')
+const discordMsgFrom = ref('')
+const discordMsgTo = ref('')
+const discordMsgText = ref('')
 
 const tgMsgFromOption = [{label: t('show'), value: 'show'}, {label: t('hide'), value: 'hide'}, {label: t('onlyName'), value:'only-name'}]
 const tgMsgToOption = [{label: t('show'), value: 'show'}, {label: t('hide'), value: 'hide'}]
@@ -933,7 +1007,7 @@ function getUpdate() {
     setTimeout(() => {
       getUpdate()
     }, 2000)
-    console.error('检查更新失败：', e)
+    console.error('Check update failed:', e)
   })
 }
 
@@ -979,6 +1053,19 @@ function openTgSetting() {
     tgChatId.value.push(...list)
   }
   tgSettingShow.value = true
+}
+
+function openDiscordSetting() {
+  discordWebhookStatus.value = setting.value.discordWebhookStatus ?? 1
+  discordMsgFrom.value = setting.value.discordMsgFrom || 'only-name'
+  discordMsgText.value = setting.value.discordMsgText || 'hide'
+  discordMsgTo.value = setting.value.discordMsgTo || 'show'
+  discordWebhookUrls.value = []
+  if (setting.value.discordWebhookUrls) {
+    const list = setting.value.discordWebhookUrls.split(',')
+    discordWebhookUrls.value.push(...list)
+  }
+  discordSettingShow.value = true
 }
 
 function openNoticePopupSetting() {
@@ -1037,7 +1124,7 @@ function openForwardRules() {
 
 function emailAddTag(val) {
   const emails = Array.from(new Set(
-      val.split(/[,，]/).map(item => item.trim()).filter(item => item)
+      val.split(/[,\uFF0C]/).map(item => item.trim()).filter(item => item)
   ));
 
   forwardEmail.value.splice(forwardEmail.value.length - 1, 1)
@@ -1051,7 +1138,7 @@ function emailAddTag(val) {
 
 function ruleEmailAddTag(val) {
   const emails = Array.from(new Set(
-      val.split(/[,，]/).map(item => item.trim()).filter(item => item)
+      val.split(/[,\uFF0C]/).map(item => item.trim()).filter(item => item)
   ));
 
   ruleEmail.value.splice(ruleEmail.value.length - 1, 1)
@@ -1066,7 +1153,7 @@ function ruleEmailAddTag(val) {
 function addChatTag(val) {
 
   const chatIds = Array.from(new Set(
-      val.split(/[,，]/).map(item => item.trim()).filter(item => item)
+      val.split(/[,\uFF0C]/).map(item => item.trim()).filter(item => item)
   ));
 
   tgChatId.value.splice(tgChatId.value.length - 1, 1)
@@ -1074,6 +1161,20 @@ function addChatTag(val) {
   chatIds.forEach(id => {
     if (!isNaN(Number(id))) {
       tgChatId.value.push(id)
+    }
+  })
+}
+
+function addDiscordWebhookTag(val) {
+  const urls = Array.from(new Set(
+      val.split(/[,\uFF0C]/).map(item => item.trim()).filter(item => item)
+  ));
+
+  discordWebhookUrls.value.splice(discordWebhookUrls.value.length - 1, 1)
+
+  urls.forEach(url => {
+    if (url.startsWith('https://') && !discordWebhookUrls.value.includes(url)) {
+      discordWebhookUrls.value.push(url)
     }
   })
 }
@@ -1116,6 +1217,17 @@ function tgBotSave() {
     tgMsgFrom: tgMsgFrom.value,
     tgMsgText: tgMsgText.value,
     tgMsgTo: tgMsgTo.value
+  }
+  editSetting(form)
+}
+
+function discordWebhookSave() {
+  const form = {
+    discordWebhookUrls: discordWebhookUrls.value + '',
+    discordWebhookStatus: discordWebhookStatus.value,
+    discordMsgFrom: discordMsgFrom.value,
+    discordMsgText: discordMsgText.value,
+    discordMsgTo: discordMsgTo.value
   }
   editSetting(form)
 }
@@ -1315,6 +1427,7 @@ function editSetting(settingForm, refreshStatus = true) {
     resendTokenFormShow.value = false
     turnstileShow.value = false
     tgSettingShow.value = false
+    discordSettingShow.value = false
     thirdEmailShow.value = false
     forwardRulesShow.value = false
     addVerifyCountShow.value = false

@@ -19,6 +19,8 @@ export const setting = sqliteTable('setting', {
 	tgBotToken: text('tg_bot_token').default('').notNull(),
 	tgChatId: text('tg_chat_id').default('').notNull(),
 	tgBotStatus: integer('tg_bot_status').default(1).notNull(),
+	discordWebhookUrls: text('discord_webhook_urls').default('').notNull(),
+	discordWebhookStatus: integer('discord_webhook_status').default(1).notNull(),
 	forwardEmail: text('forward_email').default('').notNull(),
 	forwardStatus: integer('forward_status').default(1).notNull(),
 	ruleEmail: text('rule_email').default('').notNull(),
@@ -45,6 +47,9 @@ export const setting = sqliteTable('setting', {
 	tgMsgFrom: text('tg_msg_from').default('only-name').notNull(),
 	tgMsgTo: text('tg_msg_to').default('show').notNull(),
 	tgMsgText: text('tg_msg_text').default('hide').notNull(),
+	discordMsgFrom: text('discord_msg_from').default('only-name').notNull(),
+	discordMsgTo: text('discord_msg_to').default('show').notNull(),
+	discordMsgText: text('discord_msg_text').default('hide').notNull(),
 	minEmailPrefix: integer('min_email_prefix').default(0).notNull(),
 	emailPrefixFilter: text('email_prefix_filter').default('').notNull()
 });
